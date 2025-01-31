@@ -234,134 +234,168 @@
     </div>
 
     <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const form = document.getElementById('registrationForm');
-        const successMessage = document.getElementById('successMessage');
-        const errorBanner = document.getElementById('errorBanner');
-        const loadingIndicator = document.getElementById('loadingIndicator');
-        const submitButton = document.getElementById('submitButton');
-        const leaderValidation = document.getElementById('leaderValidation');
-        const membersValidation = document.getElementById('membersValidation');
+    // Wait for DOM to be fully loaded
+document.addEventListener('DOMContentLoaded', function() {
+    // Get form elements
+    const form = document.getElementById('registrationForm');
+    const successMessage = document.getElementById('successMessage');
+    const errorBanner = document.getElementById('errorBanner');
+    const loadingIndicator = document.getElementById('loadingIndicator');
+    const submitButton = document.getElementById('submitButton');
+    const leaderValidation = document.getElementById('leaderValidation');
+    const membersValidation = document.getElementById('membersValidation');
 
-        // Input validation functions
-        function validateName(value) {
-            return value.trim().length >= 2;
+    // Validation helper functions
+    function validateName(value) {
+        return value.trim().length >= 2;
+    }
+
+    function validateEmail(email) {
+        const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return re.test(email.toLowerCase());
+    }
+
+    function validatePhone(phone) {
+        return /^[0-9]{10}$/.test(phone);
+    }
+
+    // Setup input validation
+    function setupValidation(inputId, errorId, validationFn) {
+        const input = document.getElementById(inputId);
+        const error = document.getElementById(errorId);
+
+        if (!input || !error) {
+            console.error(`Missing elements for ${inputId}`);
+            return;
         }
 
-        function validateEmail(email) {
-            const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            return re.test(email.toLowerCase());
+        function validateInput() {
+            const isValid = validationFn(input.value);
+            input.classList.toggle('error', !isValid);
+            error.style.display = isValid ? 'none' : 'block';
+            updateSectionValidation();
         }
 
-        function validatePhone(phone) {
-            return /^[0-9]{10}$/.test(phone);
-        }
+        input.addEventListener('input', validateInput);
+        input.addEventListener('blur', validateInput);
+    }
 
-        // Real-time validation
-        function setupValidation(inputId, errorId, validationFn) {
-            const input = document.getElementById(inputId);
-            const error = document.getElementById(errorId);
+    // Setup validation for all form fields
+    setupValidation('leaderName', 'leaderNameError', validateName);
+    setupValidation('leaderEmail', 'leaderEmailError', validateEmail);
+    setupValidation('leaderPhone', 'leaderPhoneError', validatePhone);
+    
+    ['member2', 'member3', 'member4', 'member5', 'member6'].forEach(memberId => {
+        setupValidation(memberId, `${memberId}Error`, validateName);
+    });
 
-            input.addEventListener('input', function() {
-                const isValid = validationFn(this.value);
-                this.classList.toggle('error', !isValid);
-                error.style.display = isValid ? 'none' : 'block';
-                updateSectionValidation();
-            });
-
-            input.addEventListener('blur', function() {
-                const isValid = validationFn(this.value);
-                this.classList.toggle('error', !isValid);
-                error.style.display = isValid ? 'none' : 'block';
-                updateSectionValidation();
-            });
-        }
-
-        // Setup validation for all inputs
-        setupValidation('leaderName', 'leaderNameError', validateName);
-        setupValidation('leaderEmail', 'leaderEmailError', validateEmail);
-        setupValidation('leaderPhone', 'leaderPhoneError', validatePhone);
-        
-        ['member2', 'member3', 'member4', 'member5', 'member6'].forEach(memberId => {
-            setupValidation(memberId, `${memberId}Error`, validateName);
+    // Update section validation status
+    function updateSectionValidation() {
+        // Validate leader section
+        const leaderFields = ['leaderName', 'leaderEmail', 'leaderPhone'];
+        const isLeaderValid = leaderFields.every(field => {
+            const input = document.getElementById(field);
+            if (!input) return false;
+            return input.value && !input.classList.contains('error');
         });
-
-        // Update section validation status
-        function updateSectionValidation() {
-            // Validate leader section
-            const leaderFields = ['leaderName', 'leaderEmail', 'leaderPhone'];
-            const isLeaderValid = leaderFields.every(field => {
-                const input = document.getElementById(field);
-                return input.value && !input.classList.contains('error');
-            });
-            
+        
+        if (leaderValidation) {
             leaderValidation.textContent = isLeaderValid ? '✓ Complete' : '× Incomplete';
             leaderValidation.className = `validation-status ${isLeaderValid ? 'valid' : 'invalid'}`;
-
-            // Validate members section
-            const memberFields = ['member2', 'member3', 'member4', 'member5', 'member6'];
-            const isMembersValid = memberFields.every(field => {
-                const input = document.getElementById(field);
-                return input.value && !input.classList.contains('error');
-            });
-            
-            membersValidation.textContent = isMembersValid ? '✓ Complete' : '× Incomplete';
-            membersValidation.className = `validation-status ${isMembersValid ? 'valid' : 'invalid'}`;
-
-            // Enable/disable submit button
-            submitButton.disabled = !(isLeaderValid && isMembersValid);
         }
 
-        // Form submission
+        // Validate members section
+        const memberFields = ['member2', 'member3', 'member4', 'member5', 'member6'];
+        const isMembersValid = memberFields.every(field => {
+            const input = document.getElementById(field);
+            if (!input) return false;
+            return input.value && !input.classList.contains('error');
+        });
+        
+        if (membersValidation) {
+            membersValidation.textContent = isMembersValid ? '✓ Complete' : '× Incomplete';
+            membersValidation.className = `validation-status ${isMembersValid ? 'valid' : 'invalid'}`;
+        }
+
+        // Enable/disable submit button
+        if (submitButton) {
+            submitButton.disabled = !(isLeaderValid && isMembersValid);
+        }
+    }
+
+    // Reset form UI state
+    function resetFormUI() {
+        if (loadingIndicator) loadingIndicator.style.display = 'none';
+        if (submitButton) submitButton.disabled = false;
+        if (errorBanner) errorBanner.style.display = 'none';
+    }
+
+    // Show error message
+    function showError(message) {
+        if (errorBanner) {
+            errorBanner.textContent = message || 'An error occurred. Please try again.';
+            errorBanner.style.display = 'block';
+        }
+        resetFormUI();
+    }
+
+    // Show success message
+    function showSuccess() {
+        if (successMessage) {
+            successMessage.style.display = 'block';
+            setTimeout(() => {
+                successMessage.style.display = 'none';
+            }, 5000);
+        }
+        resetFormUI();
+    }
+
+    // Form submission handler
+    if (form) {
         form.addEventListener('submit', async function(e) {
             e.preventDefault();
             
             // Show loading state
-            loadingIndicator.style.display = 'block';
-            submitButton.disabled = true;
-            errorBanner.style.display = 'none';
+            if (loadingIndicator) loadingIndicator.style.display = 'block';
+            if (submitButton) submitButton.disabled = true;
+            if (errorBanner) errorBanner.style.display = 'none';
             
             // Get form data
             const formData = new FormData(form);
             const jsonData = {};
-            formData.forEach((value, key) => jsonData[key] = value);
+            formData.forEach((value, key) => jsonData[key] = value.trim());
 
             try {
-                // Replace with your deployed web app URL
+                // Replace this URL with your actual Google Apps Script web app URL
                 const scriptURL = 'https://script.google.com/macros/s/AKfycbzKHvGAiEXsiTRup-5jxv-5BOYS4m6LdCPBS4VTt8NYr4EI091ctf83bxJ_lPmFJvSY/exec';
                 
                 const response = await fetch(scriptURL, {
                     method: 'POST',
-                    mode: 'no-cors',
                     headers: {
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify(jsonData)
                 });
 
-                // Hide loading state
-                loadingIndicator.style.display = 'none';
-                
-                // Show success message
-                successMessage.style.display = 'block';
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                // Show success message and reset form
                 form.reset();
+                showSuccess();
                 updateSectionValidation();
-                
-                // Hide success message after 5 seconds
-                setTimeout(() => {
-                    successMessage.style.display = 'none';
-                }, 5000);
+
             } catch (error) {
-                console.error('Error:', error);
-                loadingIndicator.style.display = 'none';
-                errorBanner.style.display = 'block';
-                submitButton.disabled = false;
+                console.error('Submission error:', error);
+                showError(error.message);
             }
         });
+    }
 
-        // Initial validation status update
-        updateSectionValidation();
-    });
+    // Initialize validation status
+    updateSectionValidation();
+});
     </script>
 </body>
 </html>
