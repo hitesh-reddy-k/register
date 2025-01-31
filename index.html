@@ -34,6 +34,7 @@
 
         .form-group {
             margin-bottom: 1.5rem;
+            position: relative;
         }
 
         .member-section {
@@ -47,6 +48,22 @@
             font-weight: 600;
             margin-bottom: 1rem;
             color: #4a90e2;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .validation-status {
+            font-size: 0.875rem;
+            margin-left: 1rem;
+        }
+
+        .validation-status.valid {
+            color: #28a745;
+        }
+
+        .validation-status.invalid {
+            color: #dc3545;
         }
 
         label {
@@ -63,12 +80,24 @@
             border-radius: 5px;
             font-size: 1rem;
             margin-bottom: 0.5rem;
+            transition: border-color 0.2s, box-shadow 0.2s;
         }
 
         input:focus {
             outline: none;
             border-color: #4a90e2;
             box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
+        }
+
+        input.error {
+            border-color: #dc3545;
+        }
+
+        .error-message {
+            color: #dc3545;
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+            display: none;
         }
 
         .submit-btn {
@@ -81,22 +110,38 @@
             cursor: pointer;
             width: 100%;
             margin-top: 1rem;
+            transition: background-color 0.2s;
         }
 
         .submit-btn:hover {
             background: #357abd;
         }
 
-        .error {
-            color: #dc3545;
-            font-size: 0.875rem;
-            margin-top: 0.25rem;
+        .submit-btn:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
+        }
+
+        .loading-indicator {
+            display: none;
+            text-align: center;
+            margin-top: 1rem;
         }
 
         .success-message {
             display: none;
             background: #d4edda;
             color: #155724;
+            padding: 1rem;
+            border-radius: 5px;
+            margin-top: 1rem;
+            text-align: center;
+        }
+
+        .error-banner {
+            display: none;
+            background: #f8d7da;
+            color: #721c24;
             padding: 1rem;
             border-radius: 5px;
             margin-top: 1rem;
@@ -119,90 +164,204 @@
         <h1>Technical Fest Registration</h1>
         <form id="registrationForm">
             <div class="member-section">
-                <div class="section-title">Team Leader Details</div>
+                <div class="section-title">
+                    Team Leader Details
+                    <span class="validation-status" id="leaderValidation"></span>
+                </div>
                 <div class="form-group">
                     <label for="leaderName">Full Name *</label>
-                    <input type="text" id="leaderName" name="leaderName" required>
+                    <input type="text" id="leaderName" name="leaderName" required minlength="2">
+                    <div class="error-message" id="leaderNameError">Please enter a valid name (minimum 2 characters)</div>
                 </div>
                 <div class="form-group">
                     <label for="leaderEmail">Email Address *</label>
                     <input type="email" id="leaderEmail" name="leaderEmail" required>
+                    <div class="error-message" id="leaderEmailError">Please enter a valid email address</div>
                 </div>
                 <div class="form-group">
                     <label for="leaderPhone">Phone Number *</label>
                     <input type="tel" id="leaderPhone" name="leaderPhone" pattern="[0-9]{10}" title="Please enter a valid 10-digit phone number" required>
+                    <div class="error-message" id="leaderPhoneError">Please enter a valid 10-digit phone number</div>
                 </div>
             </div>
 
             <div class="member-section">
-                <div class="section-title">Team Members</div>
+                <div class="section-title">
+                    Team Members
+                    <span class="validation-status" id="membersValidation"></span>
+                </div>
                 <div class="form-group">
                     <label for="member2">Member 2 Full Name *</label>
-                    <input type="text" id="member2" name="member2" required>
+                    <input type="text" id="member2" name="member2" required minlength="2">
+                    <div class="error-message" id="member2Error">Please enter a valid name (minimum 2 characters)</div>
                 </div>
                 <div class="form-group">
                     <label for="member3">Member 3 Full Name *</label>
-                    <input type="text" id="member3" name="member3" required>
+                    <input type="text" id="member3" name="member3" required minlength="2">
+                    <div class="error-message" id="member3Error">Please enter a valid name (minimum 2 characters)</div>
                 </div>
                 <div class="form-group">
                     <label for="member4">Member 4 Full Name *</label>
-                    <input type="text" id="member4" name="member4" required>
+                    <input type="text" id="member4" name="member4" required minlength="2">
+                    <div class="error-message" id="member4Error">Please enter a valid name (minimum 2 characters)</div>
                 </div>
                 <div class="form-group">
                     <label for="member5">Member 5 Full Name *</label>
-                    <input type="text" id="member5" name="member5" required>
+                    <input type="text" id="member5" name="member5" required minlength="2">
+                    <div class="error-message" id="member5Error">Please enter a valid name (minimum 2 characters)</div>
                 </div>
                 <div class="form-group">
                     <label for="member6">Member 6 Full Name *</label>
-                    <input type="text" id="member6" name="member6" required>
+                    <input type="text" id="member6" name="member6" required minlength="2">
+                    <div class="error-message" id="member6Error">Please enter a valid name (minimum 2 characters)</div>
                 </div>
             </div>
 
-            <button type="submit" class="submit-btn">Submit Registration</button>
+            <button type="submit" class="submit-btn" id="submitButton">Submit Registration</button>
         </form>
 
+        <div class="loading-indicator" id="loadingIndicator">
+            Submitting registration...
+        </div>
+
         <div class="success-message" id="successMessage">
-            Registration submitted successfully!
+            Registration submitted successfully! Your team has been registered for the Technical Fest.
+        </div>
+
+        <div class="error-banner" id="errorBanner">
+            There was an error submitting your registration. Please try again.
         </div>
     </div>
 
     <script>
-    const form = document.getElementById('registrationForm');
-    const successMessage = document.getElementById('successMessage');
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('registrationForm');
+        const successMessage = document.getElementById('successMessage');
+        const errorBanner = document.getElementById('errorBanner');
+        const loadingIndicator = document.getElementById('loadingIndicator');
+        const submitButton = document.getElementById('submitButton');
+        const leaderValidation = document.getElementById('leaderValidation');
+        const membersValidation = document.getElementById('membersValidation');
 
-    form.addEventListener('submit', function(e) {
-        e.preventDefault();
-        
-        // Replace with your deployed web app URL
-        const scriptURL = 'https://script.google.com/macros/s/AKfycbzKHvGAiEXsiTRup-5jxv-5BOYS4m6LdCPBS4VTt8NYr4EI091ctf83bxJ_lPmFJvSY/exec';
-        
-        // Get form data
-        const formData = new FormData(form);
-        const jsonData = {};
-        formData.forEach((value, key) => jsonData[key] = value);
+        // Input validation functions
+        function validateName(value) {
+            return value.trim().length >= 2;
+        }
 
-        // Send data to Google Apps Script
-        fetch(scriptURL, {
-            method: 'POST',
-            mode: 'no-cors',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(jsonData)
-        })
-        .then(response => {
-            successMessage.style.display = 'block';
-            form.reset();
-            setTimeout(() => {
-                successMessage.style.display = 'none';
-            }, 3000);
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('There was an error submitting your registration. Please try again.');
+        function validateEmail(email) {
+            const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return re.test(email.toLowerCase());
+        }
+
+        function validatePhone(phone) {
+            return /^[0-9]{10}$/.test(phone);
+        }
+
+        // Real-time validation
+        function setupValidation(inputId, errorId, validationFn) {
+            const input = document.getElementById(inputId);
+            const error = document.getElementById(errorId);
+
+            input.addEventListener('input', function() {
+                const isValid = validationFn(this.value);
+                this.classList.toggle('error', !isValid);
+                error.style.display = isValid ? 'none' : 'block';
+                updateSectionValidation();
+            });
+
+            input.addEventListener('blur', function() {
+                const isValid = validationFn(this.value);
+                this.classList.toggle('error', !isValid);
+                error.style.display = isValid ? 'none' : 'block';
+                updateSectionValidation();
+            });
+        }
+
+        // Setup validation for all inputs
+        setupValidation('leaderName', 'leaderNameError', validateName);
+        setupValidation('leaderEmail', 'leaderEmailError', validateEmail);
+        setupValidation('leaderPhone', 'leaderPhoneError', validatePhone);
+        
+        ['member2', 'member3', 'member4', 'member5', 'member6'].forEach(memberId => {
+            setupValidation(memberId, `${memberId}Error`, validateName);
         });
-    });
 
+        // Update section validation status
+        function updateSectionValidation() {
+            // Validate leader section
+            const leaderFields = ['leaderName', 'leaderEmail', 'leaderPhone'];
+            const isLeaderValid = leaderFields.every(field => {
+                const input = document.getElementById(field);
+                return input.value && !input.classList.contains('error');
+            });
+            
+            leaderValidation.textContent = isLeaderValid ? '✓ Complete' : '× Incomplete';
+            leaderValidation.className = `validation-status ${isLeaderValid ? 'valid' : 'invalid'}`;
+
+            // Validate members section
+            const memberFields = ['member2', 'member3', 'member4', 'member5', 'member6'];
+            const isMembersValid = memberFields.every(field => {
+                const input = document.getElementById(field);
+                return input.value && !input.classList.contains('error');
+            });
+            
+            membersValidation.textContent = isMembersValid ? '✓ Complete' : '× Incomplete';
+            membersValidation.className = `validation-status ${isMembersValid ? 'valid' : 'invalid'}`;
+
+            // Enable/disable submit button
+            submitButton.disabled = !(isLeaderValid && isMembersValid);
+        }
+
+        // Form submission
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            // Show loading state
+            loadingIndicator.style.display = 'block';
+            submitButton.disabled = true;
+            errorBanner.style.display = 'none';
+            
+            // Get form data
+            const formData = new FormData(form);
+            const jsonData = {};
+            formData.forEach((value, key) => jsonData[key] = value);
+
+            try {
+                // Replace with your deployed web app URL
+                const scriptURL = 'https://script.google.com/macros/s/AKfycbzKHvGAiEXsiTRup-5jxv-5BOYS4m6LdCPBS4VTt8NYr4EI091ctf83bxJ_lPmFJvSY/exec';
+                
+                const response = await fetch(scriptURL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(jsonData)
+                });
+
+                // Hide loading state
+                loadingIndicator.style.display = 'none';
+                
+                // Show success message
+                successMessage.style.display = 'block';
+                form.reset();
+                updateSectionValidation();
+                
+                // Hide success message after 5 seconds
+                setTimeout(() => {
+                    successMessage.style.display = 'none';
+                }, 5000);
+            } catch (error) {
+                console.error('Error:', error);
+                loadingIndicator.style.display = 'none';
+                errorBanner.style.display = 'block';
+                submitButton.disabled = false;
+            }
+        });
+
+        // Initial validation status update
+        updateSectionValidation();
+    });
     </script>
 </body>
 </html>
